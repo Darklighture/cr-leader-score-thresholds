@@ -140,16 +140,16 @@
 <body>  
   
 <div class="container">  
-    <h1>CR LEADERBOARD SCORES HISTORY</h1>  
+    <h1>CR LEADERBOARD HISTORY</h1>  
   
     <!-- Trophies Chart -->  
     <div class="card">  
         <h2>  
             <span>🏆 Score History</span>  
             <div class="legend-hint">  
-                <div><span class="shape shape-diamond"></span>Long (Green)</div>  
-                <div><span class="shape shape-circle"></span>Short (Orange)</div>  
-                <div><span class="shape shape-triangle"></span>Special (Grey)</div>  
+                <div><span class="shape shape-diamond"></span>Long Season</div>  
+                <div><span class="shape shape-circle"></span>Short Season</div>  
+                <div><span class="shape shape-triangle"></span>Special Season</div>  
             </div>  
         </h2>  
         <div class="chart-wrapper">  
@@ -159,7 +159,14 @@
   
     <!-- Gaps Chart -->  
     <div class="card">  
-        <h2>📊 Gap Analysis</h2>  
+        <h2>
+            <span>📊 Gap Analysis</span>  
+            <div class="legend-hint">  
+                <div><span class="shape shape-diamond"></span>Long Season</div>  
+                <div><span class="shape shape-circle"></span>Short Season</div>  
+                <div><span class="shape shape-triangle"></span>Special Season</div>  
+            </div>
+        </h2>
         <div class="chart-wrapper">  
             <canvas id="gapChart"></canvas>  
         </div>  
@@ -220,7 +227,14 @@ Seasonal Arena,,,,,,,,,,
 2025-11,3777,3693,3424,2890,2222,84,353,887,1555,short
 12000 Trophies,,,,,,,,,,
 2025-12,3914,3835,3566,2983,2222,79,348,931,1692,long
-2026-01,0,0,0,0,0,0,0,0,0,short`;    
+2026-01,0,0,0,0,0,0,0,0,0,short`;
+    
+    // 全局变量
+    let scoreChart, gapChart;
+    let scoreChartFilter = null;
+    let gapChartFilter = null;
+    let milestones = [];
+    
     // Parsing Logic  
     const rows = rawData.trim().split('\n');  
     const labels = [];  
@@ -229,7 +243,6 @@ Seasonal Arena,,,,,,,,,,
         gap10: [], gap100: [], gap1000: [], gap9999: [],  
         durations: []  
     };  
-    const milestones = [];  
       
     // Visualization Arrays  
     const pointStyles = [];  
@@ -270,109 +283,272 @@ Seasonal Arena,,,,,,,,,,
         if (duration === 'long') {  
             pStyle = 'rectRot'; // Diamond  
             pRadius = 6;  
-            colorClass = 'text-long';  
             axisColor = '#2ecc71'; // Green  
         } else if (duration === 'mega draft') {  
             pStyle = 'triangle'; // Triangle  
             pRadius = 6;  
-            colorClass = 'text-mega';  
             axisColor = '#95a5a6'; // Grey  
         } else {  
             pStyle = 'circle'; // Circle  
             pRadius = 3.5;  
-            colorClass = 'text-short';  
             axisColor = '#ff9f43'; // Orange  
         }  
   
         pointStyles.push(pStyle);  
         pointRadiuses.push(pRadius);  
         xAxisColors.push(axisColor);  
-           
+          
         dataIndex++;  
     });  
-  
-    // Create Annotations  
-    const annotations = {};  
-    milestones.forEach((m, i) => {  
-    // 为每个里程碑设置特定的垂直位置和偏移
-    let position = 'start';
-    let yOffset = 0;
     
-    // 根据里程碑名称设置不同的位置
-    if (m.name.includes('Path of Legends')) {
-        position = 'start';
-        yOffset = -20;
-    } else if (m.name.includes('Seasonal Arena')) {
-        position = 'end';
-        yOffset = -20;
-    } else if (m.name.includes('12000 Trophies')) {
-        position = 'start';
-        yOffset = -40;  // 比第一个更高一些
+    // 保存原始点半径
+    const originalPointRadiuses = [...pointRadiuses];
+    
+    // 为两个图表分别创建annotations的函数
+    function createScoreAnnotations() {
+        const scoreAnnotations = {};  
+        milestones.forEach((m, i) => {  
+            let position = 'start';
+            let yOffset = 0;
+            
+            // Score图表的里程碑位置设置
+            if (m.name.includes('Path of Legends')) {
+                position = 'start';
+                yOffset = -170;
+            } else if (m.name.includes('Seasonal Arena')) {
+                position = 'start';
+                yOffset = -170;
+            } else if (m.name.includes('12000 Trophies')) {
+                position = 'start';
+                yOffset = -160;
+            }
+            
+            scoreAnnotations[`line${i}`] = {  
+                type: 'line',  
+                xMin: m.index + 0.5,  
+                xMax: m.index + 0.5,  
+                borderColor: '#e94560',  
+                borderWidth: 2,  
+                borderDash: [5, 5],  
+                label: {  
+                    display: true,  
+                    content: m.name,  
+                    position: position,  
+                    backgroundColor: '#e94560',  
+                    color: 'white',  
+                    yAdjust: yOffset,
+                    font: {
+                        size: 10
+                    }
+                }  
+            };  
+        });
+        return scoreAnnotations;
     }
     
-        annotations[`line${i}`] = {  
-            type: 'line',  
-            xMin: m.index + 0.5,  
-            xMax: m.index + 0.5,  
-            borderColor: '#e94560',  
-            borderWidth: 2,  
-            borderDash: [5, 5],  
-            label: {  
-                display: true,  
-                content: m.name,  
-                position: 'positon',  
-                backgroundColor: '#e94560',  
-                color: 'white',  
-                yAdjust: yOffset,
-                font: {
-                       size: 10
-                }
-            }  
-        };  
-    });  
+    function createGapAnnotations() {
+        const gapAnnotations = {};  
+        milestones.forEach((m, i) => {  
+            let position = 'start';
+            let yOffset = 0;
+            
+            // Gap图表的里程碑位置设置
+            if (m.name.includes('Path of Legends')) {
+                position = 'start';
+                yOffset = -70;
+            } else if (m.name.includes('Seasonal Arena')) {
+                position = 'start';
+                yOffset = -90;
+            } else if (m.name.includes('12000 Trophies')) {
+                position = 'start';
+                yOffset = -80;
+            }
+            
+            gapAnnotations[`line${i}`] = {  
+                type: 'line',  
+                xMin: m.index + 0.5,  
+                xMax: m.index + 0.5,  
+                borderColor: '#e94560',  
+                borderWidth: 2,  
+                borderDash: [5, 5],  
+                label: {  
+                    display: true,  
+                    content: m.name,  
+                    position: position,  
+                    backgroundColor: '#e94560',  
+                    color: 'white',  
+                    yAdjust: yOffset,
+                    font: {
+                        size: 10
+                    }
+                }  
+            };  
+        });
+        return gapAnnotations;
+    }
+    
+    // 创建两个图表的annotations
+    const scoreAnnotations = createScoreAnnotations();
+    const gapAnnotations = createGapAnnotations();
   
-    // Chart Options  
-    const commonOptions = {  
-        responsive: true,  
-        maintainAspectRatio: false,  
-        plugins: {  
-            legend: { labels: { color: '#bdc3c7' } },  
-            annotation: { annotations: annotations },  
-            tooltip: {  
-                // Only show single word string in footer  
-                callbacks: {  
-                    footer: function(context) {  
-                        const idx = context[0].dataIndex;  
-                        return data.durations[idx].toUpperCase();  
+    // 通用图表选项
+    const createChartOptions = (chartType, annotations) => {
+        return {
+            responsive: true,  
+            maintainAspectRatio: false,  
+            plugins: {  
+                legend: { labels: { color: '#bdc3c7' } },  
+                annotation: { annotations: annotations },  
+                tooltip: {  
+                    callbacks: {  
+                        footer: function(context) {  
+                            const idx = context[0].dataIndex;  
+                            return data.durations[idx].toUpperCase();  
+                        }  
                     }  
                 }  
-            }  
-        },  
-        scales: {  
-            x: {   
-                grid: { color: '#2c3e50' },   
-                ticks: {   
-                    color: xAxisColors // Apply dynamic colors to labels  
-                }   
             },  
-            y: { grid: { color: '#2c3e50' }, ticks: { color: '#bdc3c7' },
-                  // 为y轴添加更多空间
-                  beginAtZero: false
-           }  
-        },  
-        interaction: { mode: 'index', intersect: false },
-    // 添加图表内边距
-        layout: {
+            scales: {  
+                x: {   
+                    grid: { color: '#2c3e50' },   
+                    ticks: {   
+                        color: xAxisColors
+                    }   
+                },  
+                y: { 
+                    grid: { color: '#2c3e50' }, 
+                    ticks: { color: '#bdc3c7' },
+                    beginAtZero: false
+                }  
+            },  
+            interaction: { mode: 'index', intersect: false },
+            layout: {
                 padding: {
-                         top: 30,  // 顶部增加内边距
-                          bottom: 20
+                    top: 30,
+                    bottom: 20
+                }
+            },
+            // 添加点击事件 - 每个图表独立
+            onClick: function(evt, elements) {
+                if (elements && elements.length > 0) {
+                    const index = elements[0].index;
+                    const duration = data.durations[index];
+                    
+                    // 根据图表类型确定当前筛选状态
+                    let currentFilter;
+                    let chartInstance;
+                    
+                    if (chartType === 'score') {
+                        currentFilter = scoreChartFilter;
+                        chartInstance = scoreChart;
+                    } else {
+                        currentFilter = gapChartFilter;
+                        chartInstance = gapChart;
+                    }
+                    
+                    // 切换筛选状态
+                    if (currentFilter === duration) {
+                        // 如果点击的是当前筛选的类型，则重置筛选
+                        currentFilter = null;
+                    } else {
+                        // 否则设置为点击的类型
+                        currentFilter = duration;
+                    }
+                    
+                    // 更新筛选状态
+                    if (chartType === 'score') {
+                        scoreChartFilter = currentFilter;
+                    } else {
+                        gapChartFilter = currentFilter;
+                    }
+                    
+                    // 更新图表显示
+                    updateChartFilter(chartInstance, currentFilter, chartType);
+                }
+            }
+        };
+    };
+    
+    // 更新单个图表筛选
+    function updateChartFilter(chart, filter, chartType) {
+        // 更新点半径
+        const updatedPointRadiuses = pointRadiuses.map((radius, index) => {
+            if (filter === null) {
+                return originalPointRadiuses[index]; // 显示所有点
+            } else if (data.durations[index] === filter) {
+                return originalPointRadiuses[index]; // 显示当前筛选类型的点
+            } else {
+                return 0; // 隐藏其他类型的点
+            }
+        });
+        
+        // 更新x轴标签颜色
+        const updatedXAxisColors = xAxisColors.map((color, index) => {
+            if (filter === null) {
+                return color; // 显示所有颜色
+            } else if (data.durations[index] === filter) {
+                return color; // 显示当前筛选类型的颜色
+            } else {
+                return '#555'; // 其他类型变暗
+            }
+        });
+        
+        if (chart) {
+            // 更新x轴标签颜色
+            chart.options.scales.x.ticks.color = updatedXAxisColors;
+            
+            // 更新所有数据集的数据点半径
+            chart.data.datasets.forEach(dataset => {
+                dataset.pointRadius = updatedPointRadiuses;
+            });
+            
+            chart.update();
+        }
+        
+        // 更新图表标题状态指示
+        updateChartStatus(chartType, filter);
+    }
+    
+    // 更新图表标题状态指示
+    function updateChartStatus(chartType, filter) {
+        let statusElement;
+        
+        if (chartType === 'score') {
+            statusElement = document.querySelector('.card:first-child .legend-hint');
+        } else {
+            statusElement = document.querySelector('.card:nth-child(2) .legend-hint');
+        }
+        
+        if (statusElement) {
+            // 移除现有的状态指示
+            const existingStatus = statusElement.querySelector('.filter-status');
+            if (existingStatus) {
+                existingStatus.remove();
+            }
+            
+            // 如果有筛选，添加状态指示
+            if (filter !== null) {
+                const statusDiv = document.createElement('div');
+                statusDiv.className = 'filter-status';
+                statusDiv.style.marginLeft = '20px';
+                statusDiv.style.fontSize = '0.75rem';
+                statusDiv.style.color = getColorForDuration(filter);
+                statusDiv.textContent = `Filtered: ${filter.toUpperCase()} (click again to cancel)`;
+                statusElement.appendChild(statusDiv);
+            }
         }
     }
-    };  
+    
+    // 根据duration类型获取颜色
+    function getColorForDuration(duration) {
+        if (duration === 'long') return '#2ecc71';
+        if (duration === 'mega draft') return '#95a5a6';
+        return '#ff9f43';
+    }
   
     // 1. Score Chart  
     const ctxScore = document.getElementById('scoreChart').getContext('2d');  
-    new Chart(ctxScore, {  
+    scoreChart = new Chart(ctxScore, {  
         type: 'line',  
         data: {  
             labels: labels,  
@@ -399,12 +575,12 @@ Seasonal Arena,,,,,,,,,,
                 }  
             ]  
         },  
-        options: commonOptions  
+        options: createChartOptions('score', scoreAnnotations)
     });  
   
     // 2. Gap Chart  
     const ctxGap = document.getElementById('gapChart').getContext('2d');  
-    new Chart(ctxGap, {  
+    gapChart = new Chart(ctxGap, {  
         type: 'line',  
         data: {  
             labels: labels,  
@@ -431,7 +607,7 @@ Seasonal Arena,,,,,,,,,,
                 }  
             ]  
         },  
-        options: commonOptions  
+        options: createChartOptions('gap', gapAnnotations)
     });  
   
 </script>  
