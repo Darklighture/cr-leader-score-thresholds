@@ -164,33 +164,6 @@
             <canvas id="gapChart"></canvas>  
         </div>  
     </div>  
-  
-    <!-- Data Table -->  
-    <div class="card">  
-        <h2>📋 Detailed Data</h2>  
-        <div class="table-responsive">  
-            <table id="dataTable">  
-                <thead>  
-                    <tr>  
-                        <th>Season</th>  
-                        <th>Top 1</th>  
-                        <th>Top 10</th>  
-                        <th>Top 100</th>  
-                        <th>Top 1000</th>  
-                        <th>Top 9999</th>  
-                        <th>Gap 1-10</th>  
-                        <th>Gap 1-100</th>  
-                        <th>Gap 1-1000</th>  
-                        <th>Gap 1-9999</th>  
-                        <th>Duration</th> <!-- Last Column -->  
-                    </tr>  
-                </thead>  
-                <tbody>  
-                    <!-- JS will populate this -->  
-                </tbody>  
-            </table>  
-        </div>  
-    </div>  
 </div>  
   
 <script>  
@@ -246,7 +219,8 @@ Seasonal Arena,,,,,,,,,,
 2025-10,3625,3515,3250,2774,2160,110,375,851,1465,short 
 2025-11,3777,3693,3424,2890,2222,84,353,887,1555,short
 12000 Trophies,,,,,,,,,,
-2025-12,0,0,0,0,0,0,0,0,0,long`;  
+2025-12,3914,3835,3566,2983,2222,79,348,931,1692,long
+2026-01,0,0,0,0,0,0,0,0,0,short`;    
     // Parsing Logic  
     const rows = rawData.trim().split('\n');  
     const labels = [];  
@@ -271,12 +245,6 @@ Seasonal Arena,,,,,,,,,,
         if (row.startsWith('Path of Legends') || row.startsWith('Seasonal Arena') || row.startsWith('12000 Trophies')) {  
             let name = row.split(',')[0];  
             milestones.push({ index: dataIndex - 1, name: name });  
-              
-            const tableBody = document.querySelector('#dataTable tbody');  
-            const tr = document.createElement('tr');  
-            tr.className = 'milestone-row';  
-            tr.innerHTML = `<td colspan="11">${name} (System Update)</td>`;  
-            tableBody.appendChild(tr);  
             return;  
         }  
   
@@ -297,7 +265,7 @@ Seasonal Arena,,,,,,,,,,
         data.durations.push(duration);  
   
         // Logic Setup  
-        let pStyle, pRadius, colorClass, axisColor;  
+        let pStyle, pRadius, axisColor;  
   
         if (duration === 'long') {  
             pStyle = 'rectRot'; // Diamond  
@@ -319,24 +287,7 @@ Seasonal Arena,,,,,,,,,,
         pointStyles.push(pStyle);  
         pointRadiuses.push(pRadius);  
         xAxisColors.push(axisColor);  
-  
-        // Populate Table  
-        const tr = document.createElement('tr');  
-        tr.innerHTML = `  
-            <td>${cols[0]}</td>  
-            <td>${cols[1]}</td>  
-            <td>${cols[2]}</td>  
-            <td>${cols[3]}</td>  
-            <td>${cols[4]}</td>  
-            <td>${cols[5]}</td>  
-            <td>${cols[6]}</td>  
-            <td>${cols[7]}</td>  
-            <td>${cols[8]}</td>  
-            <td>${cols[9]}</td>  
-            <td class="$${colorClass}">$${duration.toUpperCase()}</td>  
-        `;  
-        document.querySelector('#dataTable tbody').appendChild(tr);  
-          
+           
         dataIndex++;  
     });  
   
@@ -485,5 +436,4 @@ Seasonal Arena,,,,,,,,,,
   
 </script>  
 </body>  
-</html>  
-
+</html>
