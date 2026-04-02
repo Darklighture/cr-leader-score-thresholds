@@ -227,7 +227,10 @@ Seasonal Arena,,,,,,,,,,
 2025-11,3777,3693,3424,2890,2222,84,353,887,1555,short
 12000 Trophies,,,,,,,,,,
 2025-12,3914,3835,3566,2983,2222,79,348,931,1692,long
-2026-01,0,0,0,0,0,0,0,0,0,short`;
+2026-01,3697,3620,3326,2823,2142,77,371,874,1555,short
+2026-02,3748,3649,3375,2846,2160,99,373,902,1588,short
+14000 Trophies,,,,,,,,,,
+2026-03,0,0,0,0,0,0,0,0,0,long`;
     
     // 全局变量
     let scoreChart, gapChart;
@@ -255,7 +258,7 @@ Seasonal Arena,,,,,,,,,,
         if (index === 0) return; // Skip header  
           
         // Handle special milestones  
-        if (row.startsWith('Path of Legends') || row.startsWith('Seasonal Arena') || row.startsWith('12000 Trophies')) {  
+        if (row.startsWith('Path of Legends') || row.startsWith('Seasonal Arena') || row.startsWith('12000 Trophies') || row.startsWith('14000 Trophies')) {  
             let name = row.split(',')[0];  
             milestones.push({ index: dataIndex - 1, name: name });  
             return;  
@@ -320,7 +323,10 @@ Seasonal Arena,,,,,,,,,,
                 yOffset = -170;
             } else if (m.name.includes('12000 Trophies')) {
                 position = 'start';
-                yOffset = -160;
+                yOffset = -170;
+            } else if (m.name.includes('14000 Trophies')) {
+                position = 'start';
+                yOffset = -200;
             }
             
             scoreAnnotations[`line${i}`] = {  
@@ -358,10 +364,13 @@ Seasonal Arena,,,,,,,,,,
                 yOffset = -70;
             } else if (m.name.includes('Seasonal Arena')) {
                 position = 'start';
-                yOffset = -90;
+                yOffset = -70;
             } else if (m.name.includes('12000 Trophies')) {
                 position = 'start';
-                yOffset = -80;
+                yOffset = -70;
+            } else if (m.name.includes('14000 Trophies')) {
+                position = 'start';
+                yOffset = -100;
             }
             
             gapAnnotations[`line${i}`] = {  
@@ -448,10 +457,8 @@ Seasonal Arena,,,,,,,,,,
                     
                     // 切换筛选状态
                     if (currentFilter === duration) {
-                        // 如果点击的是当前筛选的类型，则重置筛选
                         currentFilter = null;
                     } else {
-                        // 否则设置为点击的类型
                         currentFilter = duration;
                     }
                     
@@ -471,25 +478,24 @@ Seasonal Arena,,,,,,,,,,
     
     // 更新单个图表筛选
     function updateChartFilter(chart, filter, chartType) {
-        // 更新点半径
         const updatedPointRadiuses = pointRadiuses.map((radius, index) => {
             if (filter === null) {
-                return originalPointRadiuses[index]; // 显示所有点
+                return originalPointRadiuses[index];
             } else if (data.durations[index] === filter) {
-                return originalPointRadiuses[index]; // 显示当前筛选类型的点
+                return originalPointRadiuses[index];
             } else {
-                return 0; // 隐藏其他类型的点
+                return 0;
             }
         });
         
         // 更新x轴标签颜色
         const updatedXAxisColors = xAxisColors.map((color, index) => {
             if (filter === null) {
-                return color; // 显示所有颜色
+                return color;
             } else if (data.durations[index] === filter) {
-                return color; // 显示当前筛选类型的颜色
+                return color;
             } else {
-                return '#555'; // 其他类型变暗
+                return '#555';
             }
         });
         
@@ -497,7 +503,6 @@ Seasonal Arena,,,,,,,,,,
             // 更新x轴标签颜色
             chart.options.scales.x.ticks.color = updatedXAxisColors;
             
-            // 更新所有数据集的数据点半径
             chart.data.datasets.forEach(dataset => {
                 dataset.pointRadius = updatedPointRadiuses;
             });
